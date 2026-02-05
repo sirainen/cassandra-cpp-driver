@@ -247,7 +247,6 @@ Cluster::Cluster(const ControlConnection::Ptr& connection, ClusterListener* list
     , local_dc_(local_dc)
     , supported_options_(supported_options)
     , is_recording_events_(settings.disable_events_on_startup) {
-  inc_ref();
   connection_->set_listener(this);
 
   query_plan_.reset(load_balancing_policy_->new_query_plan("", NULL, NULL));
@@ -256,6 +255,18 @@ Cluster::Cluster(const ControlConnection::Ptr& connection, ClusterListener* list
   update_token_map(hosts, connected_host_->partitioner(), schema);
 
   listener_->on_reconnect(this);
+}
+
+Cluster::~Cluster() {
+  for (LoadBalancingPolicy::Vec::const_iterator it = load_balancing_policies_.begin(),
+                                                end = load_balancing_policies_.end();
+       it != end; ++it) {
+    (*it)->close_handles();
+  }
+  if (connection_) {
+    connection_->set_listener();
+    connection_->close();
+  }
 }
 
 void Cluster::close() { event_loop_->add(new ClusterRunClose(Ptr(this))); }
@@ -486,7 +497,6 @@ void Cluster::handle_close() {
   }
   connection_.reset();
   listener_->on_close(this);
-  dec_ref();
 }
 
 void Cluster::internal_notify_host_up(const Address& address) {

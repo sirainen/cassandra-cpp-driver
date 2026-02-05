@@ -339,7 +339,6 @@ ControlConnection::ControlConnection(const Connection::Ptr& connection,
     , listen_addresses_(listen_addresses)
     , listener_(listener ? listener : &nop_listener__) {
   connection_->set_listener(this);
-  inc_ref();
 }
 
 int32_t ControlConnection::write_and_flush(const RequestCallback::Ptr& callback) {
@@ -687,10 +686,14 @@ void ControlConnection::handle_refresh_function(RefreshFunctionCallback* callbac
       Metadata::full_function_name(callback->function_name, callback->arg_types));
 }
 
-void ControlConnection::on_close(Connection* connection) {
-  listener_->on_close(this);
-  dec_ref();
+ControlConnection::~ControlConnection() {
+  if (connection_) {
+    connection_->set_listener();
+    connection_->close();
+  }
 }
+
+void ControlConnection::on_close(Connection* connection) { listener_->on_close(this); }
 
 void ControlConnection::on_event(const EventResponse::Ptr& response) {
   switch (response->event_type()) {

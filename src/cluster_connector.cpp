@@ -254,6 +254,12 @@ void ClusterConnector::on_connect(ControlConnector* connector) {
         message = "No hosts available for the control connection using the "
                   "configured load balancing policy";
       }
+
+      for (LoadBalancingPolicy::Vec::const_iterator it = policies.begin(), end = policies.end();
+           it != end; ++it) {
+        (*it)->close_handles();
+      }
+
       on_error(CLUSTER_ERROR_NO_HOSTS_AVAILABLE, message);
       return;
     }

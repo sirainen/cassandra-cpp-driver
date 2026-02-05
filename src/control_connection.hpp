@@ -218,6 +218,8 @@ public:
                     const ControlConnectionSettings& settings, const VersionNumber& server_version,
                     const VersionNumber& dse_server_version, ListenAddressMap listen_addresses);
 
+  ~ControlConnection();
+
   /**
    * Write a request and flush immediately.
    *
