@@ -137,7 +137,12 @@ void EventLoop::on_run() {
 
 EventLoop::TaskQueue::TaskQueue() { uv_mutex_init(&lock_); }
 
-EventLoop::TaskQueue::~TaskQueue() { uv_mutex_destroy(&lock_); }
+EventLoop::TaskQueue::~TaskQueue() {
+  for (Deque<Task*>::iterator it = queue_.begin(), end = queue_.end(); it != end; ++it) {
+    delete *it;
+  }
+  uv_mutex_destroy(&lock_);
+}
 
 bool EventLoop::TaskQueue::enqueue(Task* task) {
   ScopedMutex l(&lock_);

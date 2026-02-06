@@ -263,6 +263,8 @@ public:
           const LoadBalancingPolicy::Vec& load_balancing_policies, const String& local_dc,
           const StringMultimap& supported_options, const ClusterSettings& settings);
 
+  ~Cluster();
+
   /**
    * Set the listener that will handle events for the cluster
    * (*NOT* thread-safe).
