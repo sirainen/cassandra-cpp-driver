@@ -271,6 +271,12 @@ Cluster::~Cluster() {
     connection_->set_listener();
     connection_->close();
   }
+
+  for (RecordedEvent::List::iterator it = recorded_events_.begin(),
+                                     end = recorded_events_.end();
+       it != end; ++it) {
+    delete *it;
+  }
 }
 
 void Cluster::close() { event_loop_->add(new ClusterRunClose(Ptr(this))); }
