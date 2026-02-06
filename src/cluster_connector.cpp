@@ -111,6 +111,10 @@ void ClusterConnector::internal_resolve_and_connect() {
   }
 
   resolver_ = settings_.cluster_metadata_resolver_factory->new_instance(settings_);
+  if (!resolver_) {
+    on_error(CLUSTER_ERROR_NO_HOSTS_AVAILABLE, "Unable to create resolver");
+    return;
+  }
 
   resolver_->resolve(event_loop_->loop(), contact_points_,
                      bind_callback(&ClusterConnector::on_resolve, this));
@@ -151,7 +155,10 @@ void ClusterConnector::finish() {
 }
 
 void ClusterConnector::maybe_finish() {
-  if (remaining_connector_count_ > 0 && --remaining_connector_count_ == 0) {
+  if (remaining_connector_count_ > 0) {
+    --remaining_connector_count_;
+  }
+  if (remaining_connector_count_ == 0) {
     finish();
   }
 }

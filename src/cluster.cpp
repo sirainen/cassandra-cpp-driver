@@ -247,9 +247,13 @@ Cluster::Cluster(const ControlConnection::Ptr& connection, ClusterListener* list
     , local_dc_(local_dc)
     , supported_options_(supported_options)
     , is_recording_events_(settings.disable_events_on_startup) {
-  connection_->set_listener(this);
+  if (connection_) {
+    connection_->set_listener(this);
+  }
 
-  query_plan_.reset(load_balancing_policy_->new_query_plan("", NULL, NULL));
+  if (load_balancing_policy_) {
+    query_plan_.reset(load_balancing_policy_->new_query_plan("", NULL, NULL));
+  }
 
   update_schema(schema);
   update_token_map(hosts, connected_host_->partitioner(), schema);
@@ -333,7 +337,9 @@ void Cluster::update_hosts(const HostMap& hosts) {
 }
 
 void Cluster::update_schema(const ControlConnectionSchema& schema) {
-  metadata_.clear_and_update_back(connection_->server_version());
+  if (connection_) {
+    metadata_.clear_and_update_back(connection_->server_version());
+  }
 
   if (schema.keyspaces) {
     metadata_.update_keyspaces(schema.keyspaces.get(), false);
@@ -384,7 +390,8 @@ void Cluster::update_schema(const ControlConnectionSchema& schema) {
 
 void Cluster::update_token_map(const HostMap& hosts, const String& partitioner,
                                const ControlConnectionSchema& schema) {
-  if (settings_.control_connection_settings.use_token_aware_routing && schema.keyspaces) {
+  if (connection_ && settings_.control_connection_settings.use_token_aware_routing &&
+      schema.keyspaces) {
     // Create a new token map and populate it
     token_map_ = TokenMap::from_partitioner(partitioner);
     if (!token_map_) {
